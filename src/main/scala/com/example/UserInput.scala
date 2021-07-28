@@ -3,6 +3,8 @@ package com.example.userinput
 import cats.effect.IO
 import fs2.Stream
 import org.jline.terminal.{Terminal, TerminalBuilder}
+import com.example.game._
+
 
 /**
   * @author leopold
@@ -13,12 +15,11 @@ object UserInput {
   private val reader = createTerminal.reader()
   private val inputs = Stream.repeatEval(IO { reader.read() })
 
-  val moves: Stream[IO, Char] = inputs.collect {
-    case 'w' => 'w'
-    case 'd' => 'd' 
-    case 'a' => 'a'
-    case 's' => 's' 
-    case ' ' => ' '
+  val moves: Stream[IO, Direction] = inputs.collect {
+    case 'd' => Direction.Right 
+    case 'a' => Direction.Left
+    case 's' => Direction.Down
+    case 'w' => Direction.Up
   }
 
   private def createTerminal: Terminal = {
