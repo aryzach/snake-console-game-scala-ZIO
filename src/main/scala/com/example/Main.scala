@@ -16,14 +16,6 @@ object Main extends IOApp {
     IO.pure(ExitCode.Success)
 
 
-    /*
-    for {
-      _ <- Draw.eraseScreen
-      s <- game.gameStates
-      _ <- Stream.eval(Console.render(s)).compile.drain 
-      //_ <- IO.pure(ExitCode.Success)
-    } yield ExitCode.Success
-    */
   }
 
 
