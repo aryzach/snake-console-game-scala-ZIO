@@ -1,12 +1,15 @@
 package com.example.draw
 
-import cats.instances.all._
-import cats.syntax.all._
+//import cats.instances.all._
+//import cats.syntax.all._
 //import cats.syntax.traverse._
-import cats.data.State
+//import cats.data.State
 import cats.effect.IO
 import com.example.draw.Draw.DrawCommand
 import org.fusesource.jansi.{Ansi, AnsiConsole}
+
+import zio._
+import zio.prelude._
 
 import com.example.game._
 import com.example.tools._
@@ -18,45 +21,58 @@ import com.example.tools._
  * @since 26/09/18
  */
 object Draw {
-
+/*
+  trait Ansi {
+    def a(s: String): Ansi
+    def cursor(x: Int, y: Int): Ansi
+    def eraseScreen: Ansi
+    def print(s: String): Ansi
+  }
+*/
   type DrawCommand = State[Ansi, Unit]
 
-  private def ansi(modify: Ansi => Ansi): DrawCommand = State.modify[Ansi](modify)
+  private def ansi(modify: Ansi => Ansi): DrawCommand =
+    State.update(modify)
 
-  def eraseScreen: DrawCommand = ansi(_.eraseScreen())
+  def eraseScreen: DrawCommand = ansi(_.eraseScreen)
 
   def goto(x: Int, y: Int): DrawCommand = ansi(_.cursor(x, y))
-  def print(s: String): DrawCommand = ansi(_.a(s))
+  def print(s: String): DrawCommand     = ansi(_.a(s))
 
-  def printAt(x: Int, y: Int, s: String): DrawCommand = goto(x, y) *> print(s)
-
-  def printLinesAt(x: Int, y: Int, lines: Vector[String]): DrawCommand = {
-    lines.zipWithIndex
-      .traverse { case (line, idx) => printAt(x + idx, y, line) }
-      .map(_ => Unit)
-  }
-
+  def printAt(x: Int, y: Int, s: String): DrawCommand = goto(x, y).flatMap(_ => print(s))
+  /* 
+  def printLinesAt(x: Int, y: Int, lines: Vector[String]): DrawCommand =
+    for {
+      _ <- lines.zipWithIndex.forEach { case (line, idx) => printAt(x + idx, y, line) }
+    } yield ()
+  */
+  def printLinesAt(x: Int, y: Int, lines: Vector[String]): DrawCommand =
+    lines.zipWithIndex.forEach { case (line, idx) => printAt(x + idx, y, line) } map (_ => ())
+  
 
 }
 
 object Console {
-  def render(state: GameState): IO[Unit] = {
+  def render(state: GameState): ZIO[ZEnv, Nothing, Unit] = {
     val parts = state.parts
     val w = 30 
     val h = 30
     val s = createBoard(h, w, parts).map(showRow(_))
     draw(
-      Draw.eraseScreen *>
-      Draw.printAt(0,0,"_______________________________________________________________") *>
-      Draw.printLinesAt(2,2,s) *>
-      Draw.printAt(h+3,0,"_______________________________________________________________") *>
-      Draw.printAt(h+10,0, state.event.stringify) *>
-      Draw.goto(1,0)
-    )
+      for {
+        _ <- Draw.eraseScreen 
+        _ <- Draw.printAt(0,0,"_______________________________________________________________") 
+        _ <- Draw.printLinesAt(2,2,s) 
+        _ <- Draw.printAt(h+3,0,"_______________________________________________________________") 
+        _ <- Draw.printAt(h+10,0, state.event.stringify) 
+        _ <- Draw.goto(1,0)
+      } yield ()
+      )
   }
 
 
-  def draw(a: DrawCommand): IO[Unit] = IO { AnsiConsole.out.println(a.run(Ansi.ansi()).value._1) }
+  def draw(a: DrawCommand): ZIO[ZEnv, Nothing, Unit] = ZIO.succeed( AnsiConsole.out.println(a.run(Ansi.ansi())._1) )
+
   private def showRow(row: Seq[Boolean]): String = row.map(if (_) '\u25A0' else ". ").mkString
 
   private def createBoard(h: Int, w: Int, p: Parts): Vector[Seq[Boolean]] = 
