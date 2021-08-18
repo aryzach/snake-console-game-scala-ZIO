@@ -10,6 +10,7 @@ import org.fusesource.jansi.{Ansi, AnsiConsole}
 
 import zio._
 import zio.prelude._
+import zio.console._
 
 import com.example.game._
 import com.example.tools._
@@ -53,7 +54,7 @@ object Draw {
 }
 
 object Console {
-  def render(state: GameState): ZIO[ZEnv, Nothing, Unit] = {
+  def render(state: GameState): ZIO[Console, Nothing, Unit] = {
     val parts = state.parts
     val w = 30 
     val h = 30
@@ -71,7 +72,7 @@ object Console {
   }
 
 
-  def draw(a: DrawCommand): ZIO[ZEnv, Nothing, Unit] = ZIO.succeed( AnsiConsole.out.println(a.run(Ansi.ansi())._1) )
+  def draw(a: DrawCommand): ZIO[Console, Nothing, Unit] = ZIO.succeed( AnsiConsole.out.println(a.run(Ansi.ansi())._1) )
 
   private def showRow(row: Seq[Boolean]): String = row.map(if (_) '\u25A0' else ". ").mkString
 

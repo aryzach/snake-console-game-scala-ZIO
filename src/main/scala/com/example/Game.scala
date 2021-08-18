@@ -3,6 +3,11 @@ package com.example.game
 import cats.effect.{ContextShift, IO, Timer}
 import fs2.{Pure, Stream}
 
+import zio.stream.ZStream
+import zio.console._
+import java.io.IOException
+
+
 import scala.concurrent.duration.DurationLong
 
 import com.example.game.Event._
@@ -58,8 +63,8 @@ object Game {
   val linesPerLevel = 10
 }
 
-class Game(height: Int, width: Int, interactions: Stream[IO, Direction])
-(implicit timer: Timer[IO], contextShift: ContextShift[IO]) {
+class Game(height: Int, width: Int, interactions: ZStream[Console, IOException, Direction])  {
+//(implicit timer: Timer[IO], contextShift: ContextShift[IO]) {
 
   val initialParts = Parts(List(Position(3,4)))
   val initialState = GameState(initialParts, Direction.Right, UserAction(Right))
@@ -67,15 +72,15 @@ class Game(height: Int, width: Int, interactions: Stream[IO, Direction])
   /**
    * This stream reflects all changes in the state of game field.
    */
-  val gameStates: Stream[IO, GameState] = {
+  val gameStates: ZStream[Console, IOException, GameState] = {
 
     // Two sources of events:
     // 1. Regular ticks
-    val tick: Stream[IO, Event] = Stream.fixedRate[IO](250.millis).map(_ => Tick)
+//    val tick: Stream[IO, Event] = Stream.fixedRate[IO](250.millis).map(_ => Tick)
     // 2. User's interactions
-    val userMoves: Stream[IO, Event] = interactions.map(UserAction)
+    val userMoves: ZStream[Console, IOException, UserAction] = interactions.map(x => UserAction(x))
     // merge them
-    val allEvents: Stream[IO, Event] = tick merge userMoves
+    val allEvents: ZStream[Console, IOException, Event] = userMoves //tick merge userMoves
 
 
     val states = allEvents.scan(initialState)(nextState)

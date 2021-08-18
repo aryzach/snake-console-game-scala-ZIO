@@ -13,7 +13,7 @@ import zio._
 object Main extends App {
 
   override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] = {
-//    val game = new Game(1,2, UserInput.moves)
+    val game = new Game(1,2, UserInput.moves)
     Console.draw(Draw.eraseScreen).flatMap(_ => ZIO.succeed(()).exitCode)
 
 //    game.gameStates.flatMap(s => Stream.eval(Console.render(s))).compile.drain *>
