@@ -1,10 +1,9 @@
 package com.example.game
 
-import cats.effect.{ContextShift, IO, Timer}
-import fs2.{Pure, Stream}
-
 import zio.stream.ZStream
 import zio.console._
+import zio.clock._
+import zio.duration._
 import java.io.IOException
 
 
@@ -72,15 +71,15 @@ class Game(height: Int, width: Int, interactions: ZStream[Console, IOException, 
   /**
    * This stream reflects all changes in the state of game field.
    */
-  val gameStates: ZStream[Console, IOException, GameState] = {
+  val gameStates: ZStream[Console with Clock, IOException, GameState] = {
 
     // Two sources of events:
     // 1. Regular ticks
-//    val tick: Stream[IO, Event] = Stream.fixedRate[IO](250.millis).map(_ => Tick)
+    val tick: ZStream[Clock, Nothing, Event] = ZStream.tick(250.millis).map(_ => Tick)
     // 2. User's interactions
     val userMoves: ZStream[Console, IOException, UserAction] = interactions.map(x => UserAction(x))
     // merge them
-    val allEvents: ZStream[Console, IOException, Event] = userMoves //tick merge userMoves
+    val allEvents: ZStream[Console with Clock, IOException, Event] = tick merge userMoves
 
 
     val states = allEvents.scan(initialState)(nextState)
