@@ -14,11 +14,14 @@ object UserInput {
   private val reader = createTerminal.reader()
   private val inputs: ZStream[Console, IOException, Int] = ZStream.repeatEffect(ZIO.succeed(reader.read()))
 
-  val moves: ZStream[Console, IOException, Direction] = inputs.collect {
-    case 'd' => Direction.Right 
-    case 'a' => Direction.Left
-    case 's' => Direction.Down
-    case 'w' => Direction.Up
+  val moves: ZStream[Console, IOException, Position] = {
+    val p = Position(0,0)
+    inputs.collect {
+      case 'd' => p.right
+      case 'a' => p.left
+      case 's' => p.down
+      case 'w' => p.up
+    }
   }
 
   private def createTerminal: Terminal = {

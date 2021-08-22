@@ -8,7 +8,7 @@ import zio.prelude._
 import zio.console._
 
 import com.example.game._
-import com.example.tools._
+//import com.example.tools._
 
 /**
  * Based on https://github.com/m50d/console-game/blob/master/src/main/scala/example/Draw.scala
@@ -51,16 +51,17 @@ object Draw {
 object Screen {
   def render(state: GameState): ZIO[Console, Nothing, Unit] = {
     val parts = state.parts
-    val w = 30 
-    val h = 30
+    val w = state.width 
+    val h = state.height 
     val s = createBoard(h, w, parts).map(showRow(_))
+    val line = "_".repeat(w*2)
     draw(
       for {
         _ <- Draw.eraseScreen 
-        _ <- Draw.printAt(0,0,"_______________________________________________________________") 
+        _ <- Draw.printAt(0,0,line) 
         _ <- Draw.printLinesAt(2,2,s) 
-        _ <- Draw.printAt(h+3,0,"_______________________________________________________________") 
-        _ <- Draw.printAt(h+10,0, state.event.stringify) 
+        _ <- Draw.printAt(h+2,0,line) 
+        _ <- Draw.printAt(h+5,0,state.parts.p.head.stringify) 
         _ <- Draw.goto(1,0)
       } yield ()
       )

@@ -12,7 +12,7 @@ import zio.clock._
 object Main extends App {
 
   override def run(args: List[String]): ZIO[Console with Clock, Nothing, ExitCode] = {
-    val game = new Game(1,2, UserInput.moves)
+    val game = new Game(20, 20, UserInput.moves)
     for {
       _ <- Screen.draw(Draw.eraseScreen)
       a <- game.gameStates.tap(s => Screen.render(s)).either.fold(ZIO.succeed(()))((x,y) => ZIO.succeed(())).exitCode
