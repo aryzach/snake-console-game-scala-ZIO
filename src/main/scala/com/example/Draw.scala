@@ -1,10 +1,5 @@
 package com.example.draw
 
-//import cats.instances.all._
-//import cats.syntax.all._
-//import cats.syntax.traverse._
-//import cats.data.State
-import cats.effect.IO
 import com.example.draw.Draw.DrawCommand
 import org.fusesource.jansi.{Ansi, AnsiConsole}
 
@@ -53,7 +48,7 @@ object Draw {
 
 }
 
-object Console {
+object Screen {
   def render(state: GameState): ZIO[Console, Nothing, Unit] = {
     val parts = state.parts
     val w = 30 
@@ -74,7 +69,7 @@ object Console {
 
   def draw(a: DrawCommand): ZIO[Console, Nothing, Unit] = ZIO.succeed( AnsiConsole.out.println(a.run(Ansi.ansi())._1) )
 
-  private def showRow(row: Seq[Boolean]): String = row.map(if (_) '\u25A0' else ". ").mkString
+  private def showRow(row: Seq[Boolean]): String = row.map(if (_) ('\u25A0' + " ") else "  ").mkString
 
   private def createBoard(h: Int, w: Int, p: Parts): Vector[Seq[Boolean]] = 
     (for {

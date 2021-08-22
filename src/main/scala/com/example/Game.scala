@@ -57,16 +57,14 @@ sealed case class Parts(p: List[Position]) {
 sealed case class GameState (parts: Parts, direction: Direction, event: UserAction)
 
 object Game {
-
   val downInterval = 2
   val linesPerLevel = 10
 }
 
 class Game(height: Int, width: Int, interactions: ZStream[Console, IOException, Direction])  {
-//(implicit timer: Timer[IO], contextShift: ContextShift[IO]) {
 
   val initialParts = Parts(List(Position(3,4)))
-  val initialState = GameState(initialParts, Direction.Right, UserAction(Right))
+  val initialState = GameState(initialParts, Direction.Left, UserAction(Left))
 
   /**
    * This stream reflects all changes in the state of game field.
