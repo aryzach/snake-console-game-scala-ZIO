@@ -53,7 +53,8 @@ object Screen {
     val parts = state.parts
     val w = state.width 
     val h = state.height 
-    val s = createBoard(h, w, parts).map(showRow(_))
+    val food = state.food
+    val s = createBoard(h, w, parts, food).map(showRow(_))
     val line = "_".repeat(w*2)
     draw(
       for {
@@ -72,12 +73,12 @@ object Screen {
 
   private def showRow(row: Seq[Boolean]): String = row.map(if (_) ('\u25A0' + " ") else "  ").mkString
 
-  private def createBoard(h: Int, w: Int, p: Parts): Vector[Seq[Boolean]] = 
+  private def createBoard(h: Int, w: Int, p: Parts, f: Position): Vector[Seq[Boolean]] = 
     (for {
       x <- (0 to w)
       } yield for {
         y <- (0 to h)
-      } yield if (p.contains(Position(x,y))) true else false).toVector
+      } yield if (p.contains(Position(x,y)) || f.equals(Position(x,y))) true else false).toVector
 
 }
 

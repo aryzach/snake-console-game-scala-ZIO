@@ -38,16 +38,16 @@ sealed case class Position(x: Int, y: Int) {
     }
   }
   def add(p: Position) = Position(x + p.x, y + p.y)
+  def equals(p: Position) = (x == p.x) && (y == p.y)
 }
 
 sealed case class Parts(p: Seq[Position]) {
   def update(d: Position)(w: Int)(h: Int) = Parts(p.map(v => v.update(d)(w)(h)))
   def contains(v: Position): Boolean = p.contains(v)
-  //def map(f: Position => Position): Parts = Parts(p.map(f))
 }
 
 
-sealed case class GameState (parts: Parts, direction: Position, width: Int, height: Int) 
+sealed case class GameState (parts: Parts, direction: Position, width: Int, height: Int, food: Position) 
 
 object Game {
   val downInterval = 2
@@ -57,7 +57,7 @@ object Game {
 class Game(width: Int, height: Int, interactions: ZStream[Console, IOException, Position])  {
 
   val initialParts = Parts(Seq(Position(3,4)))
-  val initialState = GameState(initialParts, Position(0,0).left, width, height)
+  val initialState = GameState(initialParts, Position(0,0).left, width, height, Position(1,1))
 
   /**
    * This stream reflects all changes in the state of game field.
@@ -81,8 +81,8 @@ class Game(width: Int, height: Int, interactions: ZStream[Console, IOException, 
    */
   private def nextState(state: GameState, event: Event): GameState = {
     event match {
-      case Tick => GameState(state.parts.update(state.direction)(state.width)(state.height), state.direction, state.width, state.height)
-      case UserAction(direction) => GameState(state.parts, direction, state.width, state.height)
+      case Tick => state.copy(parts = state.parts.update(state.direction)(state.width)(state.height)) 
+      case UserAction(direction) => state.copy(direction = direction)
     }
   }
 }
