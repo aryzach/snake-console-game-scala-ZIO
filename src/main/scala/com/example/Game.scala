@@ -8,8 +8,10 @@ import java.io.IOException
 
 
 import scala.concurrent.duration.DurationLong
+import scala.collection.immutable.Queue
 
 import com.example.game.Event._
+import com.example.utils.TypeAlias._
 
 sealed trait Event
 object Event {
@@ -41,13 +43,26 @@ sealed case class Position(x: Int, y: Int) {
   def equals(p: Position) = (x == p.x) && (y == p.y)
 }
 
-sealed case class Parts(p: Seq[Position]) {
-  def update(d: Position)(w: Int)(h: Int) = Parts(p.map(v => v.update(d)(w)(h)))
+/*
+sealed case class Parts(p: Queue[Position]) {
+  def advance(d: Position)(w: Int)(h: Int) = Parts(p.map(v => v.update(d)(w)(h)))
   def contains(v: Position): Boolean = p.contains(v)
+  val head = p.head
+  def push(d: Position) = Parts(d +: p)
 }
+*/
 
 
-sealed case class GameState (parts: Parts, direction: Position, width: Int, height: Int, food: Position) 
+sealed case class GameState (parts: Parts, direction: Position, width: Int, height: Int, food: Position) {
+  def update() = {
+    val h = parts.last
+    if (food.equals(h)) {
+      this.copy(parts = parts.enqueue(h.add(direction)), food = Position(10,10))
+    } else {
+      this.copy(parts = parts.enqueue(h.add(direction)).dequeue._2)
+    }
+  }
+}
 
 object Game {
   val downInterval = 2
@@ -56,7 +71,7 @@ object Game {
 
 class Game(width: Int, height: Int, interactions: ZStream[Console, IOException, Position])  {
 
-  val initialParts = Parts(Seq(Position(3,4)))
+  val initialParts = Queue(Position(3,4))
   val initialState = GameState(initialParts, Position(0,0).left, width, height, Position(1,1))
 
   /**
@@ -81,7 +96,7 @@ class Game(width: Int, height: Int, interactions: ZStream[Console, IOException, 
    */
   private def nextState(state: GameState, event: Event): GameState = {
     event match {
-      case Tick => state.copy(parts = state.parts.update(state.direction)(state.width)(state.height)) 
+      case Tick => state.update()
       case UserAction(direction) => state.copy(direction = direction)
     }
   }

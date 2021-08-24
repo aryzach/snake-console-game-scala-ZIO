@@ -2,12 +2,6 @@ import Dependencies._
 
 val zioVersion = "1.0.4"
 
-/*
-lazy val compileDependencies = Seq(
-  "dev.zio" %% "zio" % zioVersion
-) map (_ % Compile)
-*/
-
 
 lazy val root = (project in file(".")).
   settings(
