@@ -1,9 +1,11 @@
 package com.example.game
 
+import zio._
 import zio.stream.ZStream
 import zio.console._
 import zio.clock._
 import zio.duration._
+import zio.random._
 import java.io.IOException
 
 
@@ -25,18 +27,17 @@ sealed case class Position(x: Int, y: Int) {
   def down: Position = Position(x + 1, y)
   def left: Position = Position(x, y - 1)
   def right: Position = Position(x, y + 1)
-  def update(d: Position)(w: Int)(h: Int) = {
-    val temp = Position(x,y).add(d)
-    if (temp.x > w) {
+  def wrap(w: Int)(h: Int) = {
+    if (x > w) {
       Position(0, y)
-    } else if (temp.x < 0) {
+    } else if (x < 0) {
       Position(w, y)
-    } else if (temp.y > h) {
+    } else if (y > h) {
       Position(x, 0)
-    } else if (temp.y < 0) {
+    } else if (y < 0) {
       Position(x, h)
     } else {
-      temp
+      this
     }
   }
   def add(p: Position) = Position(x + p.x, y + p.y)
@@ -53,15 +54,17 @@ sealed case class Parts(p: Queue[Position]) {
 */
 
 
+
 sealed case class GameState (parts: Parts, direction: Position, width: Int, height: Int, food: Position) {
   def update() = {
     val h = parts.last
     if (food.equals(h)) {
-      this.copy(parts = parts.enqueue(h.add(direction)), food = Position(10,10))
+      this.copy(parts = parts.enqueue(h.add(direction)).map(p => p.wrap(width)(height)), food = Position(10,10))
     } else {
-      this.copy(parts = parts.enqueue(h.add(direction)).dequeue._2)
+      this.copy(parts = parts.enqueue(h.add(direction)).dequeue._2.map(p => p.wrap(width)(height)))
     }
   }
+
 }
 
 object Game {
@@ -84,6 +87,15 @@ class Game(width: Int, height: Int, interactions: ZStream[Console, IOException, 
     val tick: ZStream[Clock, Nothing, Event] = ZStream.tick(125.millis).map(_ => Tick)
     // 2. User's interactions
     val userMoves: ZStream[Console, IOException, UserAction] = interactions.map(x => UserAction(x))
+    // 3. Random food
+    /*
+    val randomPositions: ZStream[Has[Random], Nothing, Int] = 
+      ZStream.repeatZIO {
+        for {
+          x <- nextIntBounded(5)
+        } yield (x)
+      } 
+*/
     // merge them
     val allEvents: ZStream[Console with Clock, IOException, Event] = tick merge userMoves
 
@@ -100,4 +112,5 @@ class Game(width: Int, height: Int, interactions: ZStream[Console, IOException, 
       case UserAction(direction) => state.copy(direction = direction)
     }
   }
+
 }
