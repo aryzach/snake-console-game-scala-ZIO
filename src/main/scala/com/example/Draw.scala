@@ -18,14 +18,7 @@ import com.example.utils.TypeAlias._
  * @since 26/09/18
  */
 object Draw {
-/*
-  trait Ansi {
-    def a(s: String): Ansi
-    def cursor(x: Int, y: Int): Ansi
-    def eraseScreen: Ansi
-    def print(s: String): Ansi
-  }
-*/
+
   type DrawCommand = State[Ansi, Unit]
 
   private def ansi(modify: Ansi => Ansi): DrawCommand =
