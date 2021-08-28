@@ -17,8 +17,9 @@ object Main extends App {
     val game = new Game(20, 20, UserInput.moves)
     for {
       _ <- Screen.draw(Draw.eraseScreen)
-      a <- game.gameStates.tap(s => Screen.render(s)).either.fold(ZIO.succeed(()))((_,_) => ZIO.succeed(())).exitCode
+      a <- game.gameStates.tap(Screen.render).runDrain.exitCode
     } yield a
+
   }
 }
 
